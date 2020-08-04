@@ -138,3 +138,5 @@ snapshots/
 *.npz
 results/
 plots/
+
+NDH-data/

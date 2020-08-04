@@ -1,1 +1,25 @@
-/home/shurjo/projects/rslangCORL2020/requirements.txt
+bresenham==0.2.1
+click==7.1.2
+filterpy==1.4.5
+future==0.18.2
+ipdb==0.13.2
+ipython==7.15.0
+ipython-genutils==0.2.0
+jedi==0.17.0
+matplotlib==3.2.2
+natsort==7.0.1
+networkx==2.4
+numpy==1.19.0
+opencv-contrib-python==3.4.2.17
+pandas==1.0.5
+parso==0.7.0
+pathos @ git+https://github.com/uqfoundation/pathos.git@a46fc8d276dc21eb376937ec4cade98e381bb527
+scikit-image==0.17.2
+scikit-learn==0.23.1
+scipy==1.5.0
+six==1.15.0
+sklearn==0.0
+torch==1.5.1
+tqdm==4.46.1
+xmltodict==0.12.0
+git+https://github.com/vaab/colour@master
