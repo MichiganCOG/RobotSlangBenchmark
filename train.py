@@ -61,7 +61,7 @@ def set_defaults(fold, feedback, blind, learning_rate=0.0001):
     LEARNING_RATE = learning_rate
 
 def train(train_env, encoder, decoder, n_iters, path_type, history, feedback_method, max_episode_len, max_input_length, model_prefix,
-    log_every=1, val_envs=None):
+    log_every=50, val_envs=None):
     ''' Train on training set, validating on both seen and unseen. '''
     if val_envs is None:
         val_envs = {}
