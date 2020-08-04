@@ -8,3 +8,9 @@ source env/bin/activate
 # Install requirements
 pip install -r requirements.txt
 
+
+# Make shortest path cache files
+python floyd_warshall.py 
+
+# Make particle measurement cache files
+python lut.py

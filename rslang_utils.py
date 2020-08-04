@@ -48,14 +48,6 @@ def resize50(img):
 def numify(x):
     return int("".join([_x for _x in x if _x.isdigit()]))
 
-def to_scan_id(location, target, agent_pose, goal_pose):
-    location = location.replace('/z/home/shurjo/robotslang/', '')
-    location = join('mazedata', location)
-    agent_pose = np.squeeze(np.round(agent_pose, 3))
-    goal_pose = np.squeeze(np.round(goal_pose, 3))
-    scanId = "-".join([location, target, str(agent_pose), str(goal_pose)])
-    return scanId
-
 def to_array(string):
     string = "".join([s for s in string if s not in ['[',']']])
     string = string.strip().split(' ')
