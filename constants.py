@@ -43,3 +43,7 @@ class Files:
     results   = 'NDH-output/results'
     plots     = 'NDH-output/plots'
     snapshots = 'NDH-output/snapshots'
+
+class Globs:
+    raw_maps = 'mazedata/Run_*/maze/{}'.format(Files.mapfile)
+    obj_maps = 'mazedata/Run_*/maze/{}'.format(Files.objfile)

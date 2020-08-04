@@ -17,11 +17,11 @@ class FloydWarshallRobotslang:
 
     def __init__(self, mapfile, radius=MM.R):
        
-        self.root    = mapfile
+        self.root    = dirname(mapfile)
         self.mapfile = cv2.imread(mapfile)
         self.radius  = radius
         # Load cached data
-        self.cache_file = join(dirname(self.root), 'sp_FW.npz')
+        self.cache_file = join(self.root, 'sp_FW.npz')
         if not isfile(self.cache_file):
             self.cache_sps(self.mapfile, radius)
         # Init variables
@@ -176,7 +176,6 @@ class FloydWarshallRobotslang:
         return self.dist_matrix[start, end]
     
     def cache_sps(self, mapfile, radius):
-        mapfile = cv2.imread(mapfile)
         poses, pixels = self.grid(radius)
         poses, pixels = self.remove_colored_pixels(mapfile, poses, pixels)
         poses, pixels = self.remove_close_to_walls(mapfile, poses, pixels, radius)
