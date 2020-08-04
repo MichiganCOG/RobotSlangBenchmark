@@ -45,29 +45,3 @@ def label2color(img):
         color_img[mask] = np.uint8(COLORS[CLASSES[c]])
     return color_img
 
-if __name__ == "__main__":
-    import glob
-    from os.path import join, abspath, isfile
-    import cv2
-    maps = sorted(glob.glob('/z/home/shurjo/robotslang/*'))
-    maps    = [join(m, 'maze/maze.map.png') for m in maps]
-    
-    for m in maps:
-        if not isfile(m):
-            print("{} doesn't exist".format(m))
-            continue
-        img  = cv2.imread(m)
-        labelled = color2label(img)
-
-        m = m.replace('.map.png', '.labelled.npz')
-        np.savez_compressed(m, maze_map=labelled)
-        print(abspath(m))
-
-
-
-
-
-
-
-
-
