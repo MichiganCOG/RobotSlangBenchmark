@@ -6,7 +6,7 @@ Use the following script to setup a virtual environment and cache shortest paths
 source setup.sh
 ```
 
-## Train and Evaluate
+## Training
 Use the provided `train.py` script to train the baseline seq2seq model. The script takes the following options:
 
 | Option  | Possible values  |
