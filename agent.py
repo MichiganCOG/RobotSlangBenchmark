@@ -246,8 +246,6 @@ class Seq2SeqAgent(BaseAgent):
             # Supervised training
             target = self._teacher_action(perm_obs, ended)
             self.loss += self.criterion(logit, target)
-            #if torch.isinf(self.loss):
-            #    import ipdb; ipdb.set_trace()
 
             # Determine next model inputs
             if self.feedback == 'teacher': 

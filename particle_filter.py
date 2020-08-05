@@ -179,7 +179,42 @@ class VisualParticleFilter:
     #        self.particles.evolve_state()
 
 
+from rslang_utils import get_all_data
+@click.command()
+@click.option('--trial_no', default=0, type=int)
+# Particle filter details
+@click.option('--num_particles', default=1000, type=int)
+# Particle visualization model
+@click.option('--particle_angle_range', default=np.radians(78), type=float)
+@click.option('--num_rays', default=60, type=int)
+# Particle motion model (in polar coordinates)
+@click.option('--r_mean'  , default=0.000, type=float)
+@click.option('--r_std'   , default=0.10, type=float)
+@click.option('--ang_mean', default=0.000, type=float)
+@click.option('--ang_std' , default=np.radians(45), type=float)
+# Visualization specifics
+@click.option('--visualize', default=True, type=bool)
+@click.option('--background', default=True, type=bool)
+@click.option('--save_to', default='images', type=str)
+# Measurement model
+@click.option('--row_min', default=25, type=int)
+@click.option('--row_max', default=30, type=int)
+@click.option('--n_angle_bins', default=6, type=int)
+@click.option('--front_angle_range', default=np.radians(78), type=float)
+def run_visual_localization(trial_no, num_particles, particle_angle_range, num_rays, 
+                            r_mean, r_std, ang_mean, ang_std, visualize, background, 
+                            save_to, row_min, row_max, n_angle_bins, front_angle_range):
 
+    trial = random.sample(get_all_data(),1)[0]
+    env = RobotSlangSimulator(trial['scan'], show_grid=False)
+
+    # Initialize the visual particle filter
+    vpf = VPF(env, num_particles, particle_angle_range, num_rays, r_mean,
+              r_std, ang_mean, ang_std, visualize, background, row_min, save_to,
+              row_max, n_angle_bins, front_angle_range)
+
+    # Localize the agent
+    vpf.localize()
 
 if __name__ == "__main__":
-    vp = VisualParticleFilter()
+    run_visual_localization()

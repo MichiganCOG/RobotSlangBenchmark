@@ -17,7 +17,6 @@ from model import EncoderLSTM, AttnDecoderLSTM
 from agent import Seq2SeqAgent
 from eval import Evaluation
 
-from rslang_utils import get_hostname
 from constants import EpisodeConstants as EC, Files 
 
 
@@ -42,11 +41,10 @@ MAX_EPISODE_LEN = EC.max_len
 MAX_INPUT_LENGTH = 100  
 
 # Original defaults
-hostname = get_hostname()
-RESULT_DIR     = None #'tasks/NDH/results/{}/'.format(hostname)
-SNAPSHOT_DIR   = None #'tasks/NDH/snapshots/{}/'.format(hostname)
-PLOT_DIR       = None #'tasks/NDH/plots/{}/'.format(hostname)
-LEARNING_RATE  = None # 0.0001
+RESULT_DIR     = None 
+SNAPSHOT_DIR   = None 
+PLOT_DIR       = None 
+LEARNING_RATE  = None 
 
 def set_defaults(fold, feedback, blind, learning_rate=0.0001):
     global RESULT_DIR, SNAPSHOT_DIR, PLOT_DIR, LEARNING_RATE
