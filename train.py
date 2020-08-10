@@ -20,6 +20,7 @@ from eval import Evaluation
 
 from constants import EpisodeConstants as EC, Files 
 
+import wandb
 
 # VOCAB
 TRAIN_VOCAB    = '{}/train_vocab.txt'.format(Files.data)
@@ -112,6 +113,9 @@ def train(train_env, encoder, decoder, n_iters, seed, history, feedback_method, 
             for metric, val in score_summary.items():
                 data_log['%s %s' % (env_name, metric)].append(val)
                 loss_str += ', %s: %.3f' % (metric, val)
+
+            # Log to weights and biases
+            wandb.log(score_summary, step=idx)
 
         agent.env = train_env
 
@@ -209,7 +213,6 @@ if __name__ == "__main__":
 
     # Set the default folder locations
     set_defaults(args.eval_type, args.feedback, args.blind, args.lr)
-
     blind = args.blind
 
     # Set default args.
@@ -223,9 +226,15 @@ if __name__ == "__main__":
     n_iters = 5000 if feedback_method == 'teacher' else 20000
 
     # Model prefix to uniquely id this instance.
-    model_prefix = '%s-seq2seq-%d-%s' % (args.eval_type, max_episode_len, feedback_method)
+    model_prefix = '%s-seq2seq-%d-%s-seed=%d' % (args.eval_type, max_episode_len, feedback_method, seed)
     if blind:
         model_prefix += '-blind={}'.format(blind)
+    if debug:
+        model_prefix += '-debug={}'.format(debug)
+
+    # Save results to weights and biases
+    wandb.init(project='RobotSlangBenchmark', name=model_prefix, )
+    wandb.config.update(dict(args._get_kwargs()))
 
     if args.eval_type == 'val':
         train_val(args.seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug)
