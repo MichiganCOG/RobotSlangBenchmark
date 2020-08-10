@@ -165,6 +165,10 @@ class Seq2SeqAgent(BaseAgent):
     def n_outputs():
         return len(Seq2SeqAgent.model_actions)-2 # Model doesn't output start or ignore or end (for matterport, episode length is tiny so sampling end step makes sense)
 
+    @property
+    def training(self):
+        return self.encoder.training and self.decoder.training
+
     def _sort_batch(self, obs):
         ''' Extract instructions from a list of observations and sort by descending
             sequence length (to enable PyTorch packing). '''
@@ -217,11 +221,11 @@ class Seq2SeqAgent(BaseAgent):
         # Record starting point
         traj = [dict(inst_idx=ob['inst_idx'], scan=ob['scan'], path=[ob['agent'][0].tolist()]) for ob in perm_obs]
 
-        # Forward through encoder, giving initial hidden state and memory cell for decoder
-        
+        # Zero out language sequences if blinded
         if self.blind == 'language':
             seq *= 0
         
+        # Forward through encoder, giving initial hidden state and memory cell for decoder
         ctx,h_t,c_t = self.encoder(seq, seq_lengths)
 
         # Initial action
@@ -236,12 +240,15 @@ class Seq2SeqAgent(BaseAgent):
             f_t = self._feature_variable(perm_obs) # Image features from obs
             h_t, c_t, alpha, logit = self.decoder(a_t.view(-1, 1), f_t, h_t, c_t, ctx, seq_mask)
             
-            # Mask outputs where agent can't move forward
             for i,ob in enumerate(perm_obs):
+                # Mask outputs where agent can't move forward
                 if ob['collision']:
                     logit[i, self.model_actions.index('forward')] = -float('inf')
-                if ob['teacher'] != self.model_actions.index('<end>'):
-                    logit[i, self.model_actions.index('<end>')] = -float('inf')
+                
+                # Prevents information leak / "cheating" when testing
+                if self.training: 
+                    if ob['teacher'] != self.model_actions.index('<end>'):
+                        logit[i, self.model_actions.index('<end>')] = -float('inf')
 
             # Supervised training
             target = self._teacher_action(perm_obs, ended)

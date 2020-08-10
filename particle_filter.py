@@ -7,34 +7,32 @@ perspective.
 Visual localization of robot using a particle filtering approach
 
 """
-
+#import sys; import os; sys.path.append(os.getcwd())
 import cv2
-import matplotlib
-#matplotlib.use('Agg') # Background
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import numpy as np
-from .utils import angle_range_vector
 import os
 import glob
 import time 
 import random 
-from .particles import Particles
+from particles import Particles
 import socket
 import pickle
-from robotslang.labels import label2color
 from rslang_utils import pose2pixel, point, show
 from tqdm import tqdm
 
 from constants import MazeConstants as MC, Action
-from rslang_utils import to_onehot_array, color2bgr, softmax
-from robotslang.labels import LABELS
+from rslang_utils import to_onehot_array, color2bgr, softmax, angle_range_vector
+from labels import LABELS, label2color
 from histogram_features import HistogramFeatures
 
 from scipy.signal import correlate
 from colour import Color
+import click
+from rslang_simulator import RobotSlangSimulator
+from utils import load_datasets
 
-class VisualParticleFilter:
+
+class ParticleFilter:
     """
     Class representation of visual particle filter.
     """
@@ -179,12 +177,10 @@ class VisualParticleFilter:
     #        self.particles.evolve_state()
 
 
-from rslang_utils import get_all_data
-@click.command()
-@click.option('--trial_no', default=0, type=int)
-# Particle filter details
-@click.option('--num_particles', default=1000, type=int)
 # Particle visualization model
+@click.command()
+@click.option('--trial_no', default=None, type=int)
+@click.option('--num_particles', default=1000, type=int)
 @click.option('--particle_angle_range', default=np.radians(78), type=float)
 @click.option('--num_rays', default=60, type=int)
 # Particle motion model (in polar coordinates)
@@ -204,12 +200,15 @@ from rslang_utils import get_all_data
 def run_visual_localization(trial_no, num_particles, particle_angle_range, num_rays, 
                             r_mean, r_std, ang_mean, ang_std, visualize, background, 
                             save_to, row_min, row_max, n_angle_bins, front_angle_range):
-
-    trial = random.sample(get_all_data(),1)[0]
+    
+    data = load_datasets(["train", "val_seen", "test"])
+    if trial_no is None:
+        trial_no = random.sample(range(len(data)), 1)[0]
+    trial = data[trial_no]
     env = RobotSlangSimulator(trial['scan'], show_grid=False)
 
     # Initialize the visual particle filter
-    vpf = VPF(env, num_particles, particle_angle_range, num_rays, r_mean,
+    vpf = ParticleFilter(env, num_particles, particle_angle_range, num_rays, r_mean,
               r_std, ang_mean, ang_std, visualize, background, row_min, save_to,
               row_max, n_angle_bins, front_angle_range)
 

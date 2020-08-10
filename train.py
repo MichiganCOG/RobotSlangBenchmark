@@ -4,6 +4,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch import optim
 import torch.nn.functional as F
+import random
 
 import os
 import time
@@ -58,9 +59,14 @@ def set_defaults(fold, feedback, blind, learning_rate=0.0001):
             os.makedirs(dirs)
     LEARNING_RATE = learning_rate
 
-def train(train_env, encoder, decoder, n_iters, path_type, history, feedback_method, max_episode_len, max_input_length, model_prefix,
-    log_every=50, val_envs=None):
+def train(train_env, encoder, decoder, n_iters, seed, history, feedback_method, max_episode_len, max_input_length, model_prefix,
+    log_every=50, val_envs=None, debug=False):
     ''' Train on training set, validating on both seen and unseen. '''
+    
+    if debug: 
+        print("Training in debug mode")
+        log_every = 1
+
     if val_envs is None:
         val_envs = {}
 
@@ -121,9 +127,11 @@ def train(train_env, encoder, decoder, n_iters, path_type, history, feedback_met
         dec_path = '%s%s_%s_dec_iter_%d' % (SNAPSHOT_DIR, model_prefix, split_string, iter)
         agent.save(enc_path, dec_path)
 
-def setup():
-    torch.manual_seed(1)
-    torch.cuda.manual_seed(1)
+def setup(seed=1):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    random.seed(seed)
+    
     # Check for vocabs
     if not os.path.exists(TRAIN_VOCAB):
         write_vocab(build_vocab(splits=['train']), TRAIN_VOCAB)
@@ -132,20 +140,20 @@ def setup():
 
 
 
-def train_val(path_type, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind):
+def train_val(seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug):
     ''' Train on the training set, and validate on seen and unseen splits. '''
   
-    setup()
+    setup(seed)
     # Create a batch training environment that will also preprocess text
     vocab = read_vocab(TRAIN_VOCAB)
     tok = Tokenizer(vocab=vocab, encoding_length=max_input_length)
     train_env = R2RBatch(batch_size=batch_size, splits=['train'], tokenizer=tok,
-                         path_type=path_type, history=history, blind=blind)
+                         seed=seed, history=history, blind=blind)
 
     # Creat validation environments
     val_envs = {split: (R2RBatch(batch_size=batch_size, splits=[split], 
-                tokenizer=tok, path_type=path_type, history=history, blind=blind),
-                Evaluation([split], path_type=path_type)) for split in ['val_seen']}
+                tokenizer=tok, seed=seed, history=history, blind=blind),
+                Evaluation([split], seed=seed)) for split in ['val_seen']}
 
     # Build models and train
     enc_hidden_size = hidden_size//2 if bidirectional else hidden_size
@@ -154,23 +162,23 @@ def train_val(path_type, max_episode_len, history, max_input_length, feedback_me
     decoder = AttnDecoderLSTM(Seq2SeqAgent.n_inputs(), Seq2SeqAgent.n_outputs(),
                   action_embedding_size, hidden_size, dropout_ratio, feature_size).cuda()
     train(train_env, encoder, decoder, n_iters,
-          path_type, history, feedback_method, max_episode_len, max_input_length, model_prefix, val_envs=val_envs)
+          seed, history, feedback_method, max_episode_len, max_input_length, model_prefix, val_envs=val_envs, debug=debug)
 
 
-def train_test(path_type, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind):
+def train_test(seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug):
     ''' Train on the training set, and validate on the test split. '''
 
-    setup()
+    setup(seed)
     # Create a batch training environment that will also preprocess text
     vocab = read_vocab(TRAINVAL_VOCAB)
     tok = Tokenizer(vocab=vocab, encoding_length=MAX_INPUT_LENGTH)
     train_env = R2RBatch(batch_size=batch_size, splits=['train', 'val_seen'], tokenizer=tok,
-                         path_type=path_type, history=history, blind=blind)
+                         seed=seed, history=history, blind=blind)
 
     # Creat validation environments
     val_envs = {split: (R2RBatch(batch_size=batch_size, splits=[split], 
-                tokenizer=tok, path_type=path_type, history=history, blind=blind),
-                Evaluation([split], path_type=path_type)) for split in ['test']}
+                tokenizer=tok, seed=seed, history=history, blind=blind),
+                Evaluation([split], seed=seed)) for split in ['test']}
 
     # Build models and train
     enc_hidden_size = hidden_size//2 if bidirectional else hidden_size
@@ -179,7 +187,7 @@ def train_test(path_type, max_episode_len, history, max_input_length, feedback_m
     decoder = AttnDecoderLSTM(Seq2SeqAgent.n_inputs(), Seq2SeqAgent.n_outputs(),
                   action_embedding_size, hidden_size, dropout_ratio, feature_size).cuda()
     train(train_env, encoder, decoder, n_iters,
-          path_type, history, feedback_method, max_episode_len, max_input_length, model_prefix, val_envs=val_envs)
+          seed, history, feedback_method, max_episode_len, max_input_length, model_prefix, val_envs=val_envs, debug=debug)
 
 if __name__ == "__main__":
 
@@ -191,6 +199,8 @@ if __name__ == "__main__":
     parser.add_argument('--blind', type=str, required=False, default='',
                         help='language, vision')
     parser.add_argument('--lr', type=float, required=False, default=0.0001)
+    parser.add_argument('--seed', type=int, required=False, default=1)
+    parser.add_argument('--debug', action='store_true', help='Run in debug mode')
     
     args = parser.parse_args()
 
@@ -203,10 +213,11 @@ if __name__ == "__main__":
     blind = args.blind
 
     # Set default args.
-    path_type = 'path-planner'
+    seed = args.seed
     max_episode_len = MAX_EPISODE_LEN
     history = 'all' 
     max_input_length = MAX_INPUT_LENGTH
+    debug = args.debug
     
     feedback_method = args.feedback
     n_iters = 5000 if feedback_method == 'teacher' else 20000
@@ -217,8 +228,8 @@ if __name__ == "__main__":
         model_prefix += '-blind={}'.format(blind)
 
     if args.eval_type == 'val':
-        train_val(path_type, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind)
+        train_val(args.seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug)
     else:
-        train_test(path_type, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind)
+        train_test(seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug)
 
-    # test_submission(path_type, max_episode_len, history, MAX_INPUT_LENGTH, feedback_method, n_iters, model_prefix, blind)
+    # test_submission(seed, max_episode_len, history, MAX_INPUT_LENGTH, feedback_method, n_iters, model_prefix, blind)

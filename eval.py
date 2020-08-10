@@ -29,7 +29,7 @@ def to_meters(path):
 class Evaluation(object):
     ''' Results submission format:  [{'instr_id': string, 'trajectory':[(viewpoint_id, heading_rads, elevation_rads),] } ] '''
 
-    def __init__(self, splits, path_type='planner_path'):
+    def __init__(self, splits, seed='planner_path'):
         self.error_margin = 1. #EC.dist_threshold  # cm
         self.splits = splits
         self.gt = {}
@@ -42,7 +42,7 @@ class Evaluation(object):
 
         self.instr_ids = set(self.instr_ids)
         self.distances = {}
-        self.path_type = path_type
+        self.seed = seed
 
     
     def _get_nearest(self, distances, goal_id, path):
@@ -103,14 +103,14 @@ RESULT_DIR = 'tasks/NDH/results/{}/'.format(get_hostname())
 
 
 def eval_simple_agents():
-    # path_type = 'planner_path'
-    # path_type = 'player_path'
-    path_type = 'trusted_path'
+    # seed = 'planner_path'
+    # seed = 'player_path'
+    seed = 'trusted_path'
 
     ''' Run simple baselines on each split. '''
     for split in ['train', 'val_seen', 'val_unseen']:
-        env = R2RBatch(None, batch_size=1, splits=[split], path_type=path_type)
-        ev = Evaluation([split], path_type=path_type)
+        env = R2RBatch(None, batch_size=1, splits=[split], seed=seed)
+        ev = Evaluation([split], seed=seed)
 
         for agent_type in ['Stop', 'Shortest', 'Random']:
             outfile = '%s%s_%s_agent.json' % (RESULT_DIR, split, agent_type.lower())
