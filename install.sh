@@ -2,7 +2,7 @@
 
 # Setup a python3 virtual environment
 PYTHONPATH=""
-virtualenv -p /usr/bin/python3 env
+virtualenv -p /usr/bin/python3.5 env
 source env/bin/activate
 
 # Install requirements

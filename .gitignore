@@ -144,3 +144,6 @@ NDH-output/
 *.avi
 
 wandb/
+
+slurm_logs/
+new_env/

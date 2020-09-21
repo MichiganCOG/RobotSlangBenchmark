@@ -1,0 +1,27 @@
+#!/bin/bash
+#SBATCH -N 1
+#SBATCH --time=4320  # Time in Minutes
+#SBATCH --output=slurm_logs/%j.txt
+#SBATCH --partition=lgns28
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-user=shurjo@umich.edu
+#SBATCH --cpus-per-task=4
+#SBATCH --gres=gpu:1
+
+export CUDA_VISIBLE_DEVICES="${SLURM_JOB_GPUS}"
+echo $CUDA_VISIBLE_DEVICES
+
+echo $HOSTNAME
+
+
+wandb login 3be59e86854e7deac9e39bf127723eb2e4bf834d
+
+cd $SLURM_SUBMIT_DIR
+source setup.sh
+
+ulimit -n 50000
+
+echo "$ARGS"
+$ARGS
+
+

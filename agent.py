@@ -144,7 +144,7 @@ class Seq2SeqAgent(BaseAgent):
     ]
     feedback_options = ['teacher', 'argmax', 'sample']
 
-    def __init__(self, env, results_path, encoder, decoder, episode_len=20, path_type='planner_path', blind=None):
+    def __init__(self, env, results_path, encoder, decoder, episode_len=20, path_type='planner_path', blind=None, debug=False):
         super(Seq2SeqAgent, self).__init__(env, results_path)
         self.encoder = encoder
         self.decoder = decoder
@@ -153,9 +153,10 @@ class Seq2SeqAgent(BaseAgent):
         self.criterion = nn.CrossEntropyLoss(ignore_index = self.model_actions.index('<ignore>'))
 
         self.blind = blind
+        self.debug = debug
 
         # Scale features to have unit mean and variance
-        self.scaler = get_scaler()
+        self.scaler = get_scaler(debug)
 
     @staticmethod
     def n_inputs():
@@ -240,28 +241,30 @@ class Seq2SeqAgent(BaseAgent):
             f_t = self._feature_variable(perm_obs) # Image features from obs
             h_t, c_t, alpha, logit = self.decoder(a_t.view(-1, 1), f_t, h_t, c_t, ctx, seq_mask)
             
-            for i,ob in enumerate(perm_obs):
-                # Mask outputs where agent can't move forward
-                if ob['collision']:
-                    logit[i, self.model_actions.index('forward')] = -float('inf')
-                
-                # Prevents information leak / "cheating" when testing
-                if self.training: 
-                    if ob['teacher'] != self.model_actions.index('<end>'):
-                        logit[i, self.model_actions.index('<end>')] = -float('inf')
 
             # Supervised training
             target = self._teacher_action(perm_obs, ended)
             self.loss += self.criterion(logit, target)
+            
+            # Moved to after loss is calculated (to allow <END> action to be chosen)
+            logit_det = logit.detach().clone()
+            for i,ob in enumerate(perm_obs):
+                # Mask outputs where agent can't move forward
+                if ob['collision']:
+                    logit_det[i, self.model_actions.index('forward')] = -float('inf')
+                
+                if not self.training or \
+                        ob['teacher'] != self.model_actions.index('<end>'):
+                   logit_det[i, self.model_actions.index('<end>')] = -float('inf')
 
             # Determine next model inputs
             if self.feedback == 'teacher': 
                 a_t = target                # teacher forcing
             elif self.feedback == 'argmax': 
-                _,a_t = logit.max(1)        # student forcing - argmax
+                _,a_t = logit_det.max(1)        # student forcing - argmax
                 a_t = a_t.detach()
             elif self.feedback == 'sample':
-                probs = F.softmax(logit, dim=1) # don't sample stopping
+                probs = F.softmax(logit_det, dim=1) # don't sample stopping
                 m = D.Categorical(probs)
                 a_t = m.sample()            # sampling an action from model
             else:

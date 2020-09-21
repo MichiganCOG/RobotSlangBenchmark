@@ -29,7 +29,7 @@ BLUE  = (255,   0,   0)
 GREEN = (  0, 255,   0)
 
 @lru_cache()
-def get_targets(fname='lookup_scans.json'):
+def get_targets(fname=Files.basedir + '/lookup_scans.json'):
     with open(fname, 'r') as f:
         out = json.load(f)
     return out
@@ -39,7 +39,7 @@ class RobotSlangSimulator:
     def __init__(self, scanId, show_rays=True, show_grid=True): 
         self.scanId = scanId
         self.root, self.target, agent_pose, goal_pose = scanId.split('-')
-        self.root = dirname(self.root)
+        self.root = os.path.join(Files.basedir, dirname(self.root))
         self.agent_pose_ini = to_array(agent_pose)
         self.goal_pose_ini  = to_array(goal_pose)
         

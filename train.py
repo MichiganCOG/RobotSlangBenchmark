@@ -30,11 +30,12 @@ TRAINVAL_VOCAB = '{}/trainval_vocab.txt'.format(Files.data)
 agent_type = 'seq2seq'
 
 # Fixed params from MP.
+word_embedding_size = 64
+hidden_size         = 64
+
 batch_size = 100
-word_embedding_size = 128
-action_embedding_size = 8
+action_embedding_size = 4
 target_embedding_size = 2
-hidden_size = 128
 bidirectional = False
 dropout_ratio = 0.5
 weight_decay = 0.0005
@@ -42,25 +43,48 @@ feature_size = 144
 MAX_EPISODE_LEN = EC.max_len 
 MAX_INPUT_LENGTH = 100  
 
-# Original defaults
+# Original defaultu
 RESULT_DIR     = None 
 SNAPSHOT_DIR   = None 
 PLOT_DIR       = None 
 LEARNING_RATE  = None 
 
-def set_defaults(fold, feedback, blind, learning_rate=0.0001):
+def set_defaults(args, model_prefix, fold, feedback, blind, learning_rate=0.0001):
     global RESULT_DIR, SNAPSHOT_DIR, PLOT_DIR, LEARNING_RATE
-    par_folder     = '{}_feedback-{}_blind-{}_lr-{:f}'.format(
-                                fold, feedback, blind, learning_rate)
-    RESULT_DIR     = '{}/{}/'.format(Files.results  , par_folder)
-    SNAPSHOT_DIR   = '{}/{}/'.format(Files.snapshots, par_folder)
-    PLOT_DIR       = '{}/{}/'.format(Files.plots    , par_folder)
+    global LEARNING_RATE, hidden_size, word_embedding_size
+    par_folder     = '{}_feedback-{}_blind-{}_lr-{:f}_hs-{}_we-{}'.format(
+                    fold, feedback, blind, learning_rate, hidden_size, word_embedding_size)
+    RESULT_DIR     = '{}/{}/seed-{}/'.format(Files.results  , par_folder, args.seed)
+    SNAPSHOT_DIR   = '{}/{}/seed-{}/'.format(Files.snapshots, par_folder, args.seed)
+    PLOT_DIR       = '{}/{}/seed-{}/'.format(Files.plots    , par_folder, args.seed)
     for dirs in [RESULT_DIR, SNAPSHOT_DIR, PLOT_DIR]:
         if not os.path.isdir(dirs):
             os.makedirs(dirs)
-    LEARNING_RATE = learning_rate
+    
+    LEARNING_RATE       = learning_rate
+    hidden_size         = args.hidden_size
+    word_embedding_size = args.word_embedding_size
+    
+    
+    # Update config with local and global hyper-parameters 
+    # FIXME Globals are bad - move to a argparse/click based parameter input system
+    params = dict(args._get_kwargs())
+    params.update(locals())
+    params.update(globals())
+    value_param = lambda k, v: isinstance(v, (float, bool, str, int)) and '__' not in k
+    params = {k:v for k,v in params.items() if value_param(k,v)}
+    
+    # Initialize wandb for experiment tracking
+    project = 'RobotSlangBenchmarkEND-2'
+    if args.debug:
+        project = 'DEBUG-' + project
+    wandb.init(project=project, name=model_prefix)
+    # Register all params for grouping purposes 
+    wandb.config.update(params)
 
-def train(train_env, encoder, decoder, n_iters, seed, history, feedback_method, max_episode_len, max_input_length, model_prefix,
+
+
+def train(eval_type, train_env, encoder, decoder, n_iters, seed, history, feedback_method, max_episode_len, max_input_length, model_prefix,
     log_every=50, val_envs=None, debug=False):
     ''' Train on training set, validating on both seen and unseen. '''
     
@@ -114,8 +138,6 @@ def train(train_env, encoder, decoder, n_iters, seed, history, feedback_method, 
                 data_log['%s %s' % (env_name, metric)].append(val)
                 loss_str += ', %s: %.3f' % (metric, val)
 
-            # Log to weights and biases
-            wandb.log(score_summary, step=idx)
 
         agent.env = train_env
 
@@ -130,6 +152,18 @@ def train(train_env, encoder, decoder, n_iters, seed, history, feedback_method, 
         enc_path = '%s%s_%s_enc_iter_%d' % (SNAPSHOT_DIR, model_prefix, split_string, iter)
         dec_path = '%s%s_%s_dec_iter_%d' % (SNAPSHOT_DIR, model_prefix, split_string, iter)
         agent.save(enc_path, dec_path)
+        
+        # Log data to wandb for visualization
+        wandb.log(last_entry(data_log, eval_type), step=idx)
+
+def last_entry(data_log, eval_type):
+    # Separate metrics and losses in to different sections in wandb
+    out = {k.replace(' ', '_'): v[-1] for k,v in data_log.items()}
+    del out['iteration']
+    new_out = {}
+    for k,v in out.items():
+        new_out['{}-{}/{}'.format(eval_type, 'loss' if 'loss' in k else 'metrics', k)] = v
+    return new_out
 
 def setup(seed=1):
     torch.manual_seed(seed)
@@ -144,7 +178,7 @@ def setup(seed=1):
 
 
 
-def train_val(seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug):
+def train_val(eval_type, seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug):
     ''' Train on the training set, and validate on seen and unseen splits. '''
   
     setup(seed)
@@ -165,11 +199,11 @@ def train_val(seed, max_episode_len, history, max_input_length, feedback_method,
                   dropout_ratio, bidirectional=bidirectional).cuda()
     decoder = AttnDecoderLSTM(Seq2SeqAgent.n_inputs(), Seq2SeqAgent.n_outputs(),
                   action_embedding_size, hidden_size, dropout_ratio, feature_size).cuda()
-    train(train_env, encoder, decoder, n_iters,
+    train(eval_type, train_env, encoder, decoder, n_iters,
           seed, history, feedback_method, max_episode_len, max_input_length, model_prefix, val_envs=val_envs, debug=debug)
 
 
-def train_test(seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug):
+def train_test(eval_type, seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug):
     ''' Train on the training set, and validate on the test split. '''
 
     setup(seed)
@@ -190,7 +224,7 @@ def train_test(seed, max_episode_len, history, max_input_length, feedback_method
                   dropout_ratio, bidirectional=bidirectional).cuda()
     decoder = AttnDecoderLSTM(Seq2SeqAgent.n_inputs(), Seq2SeqAgent.n_outputs(),
                   action_embedding_size, hidden_size, dropout_ratio, feature_size).cuda()
-    train(train_env, encoder, decoder, n_iters,
+    train(eval_type, train_env, encoder, decoder, n_iters,
           seed, history, feedback_method, max_episode_len, max_input_length, model_prefix, val_envs=val_envs, debug=debug)
 
 if __name__ == "__main__":
@@ -205,6 +239,8 @@ if __name__ == "__main__":
     parser.add_argument('--lr', type=float, required=False, default=0.0001)
     parser.add_argument('--seed', type=int, required=False, default=1)
     parser.add_argument('--debug', action='store_true', help='Run in debug mode')
+    parser.add_argument('--hidden_size', type=int, required=False, default=64)
+    parser.add_argument('--word_embedding_size', type=int, required=False, default=64)
     
     args = parser.parse_args()
 
@@ -212,33 +248,33 @@ if __name__ == "__main__":
     assert args.eval_type in ['val', 'test']
 
     # Set the default folder locations
-    set_defaults(args.eval_type, args.feedback, args.blind, args.lr)
-    blind = args.blind
-
-    # Set default args.
-    seed = args.seed
+    feedback_method = args.feedback
+    #n_iters = 5000 if feedback_method == 'teacher' else 20000
+    n_iters = 2000
+    args.n_iters = n_iters
     max_episode_len = MAX_EPISODE_LEN
+    
+    # Set default args.
+    blind = args.blind
+    seed = args.seed
     history = 'all' 
     max_input_length = MAX_INPUT_LENGTH
     debug = args.debug
     
-    feedback_method = args.feedback
-    n_iters = 5000 if feedback_method == 'teacher' else 20000
-
     # Model prefix to uniquely id this instance.
-    model_prefix = '%s-seq2seq-%d-%s-seed=%d' % (args.eval_type, max_episode_len, feedback_method, seed)
+    model_prefix = 'feedback_%s-hs_%d-we_%d' % (feedback_method, args.hidden_size, args.word_embedding_size)
     if blind:
-        model_prefix += '-blind={}'.format(blind)
+        model_prefix += '-blind_{}'.format(blind)
     if debug:
         model_prefix += '-debug={}'.format(debug)
 
-    # Save results to weights and biases
-    wandb.init(project='RobotSlangBenchmark', name=model_prefix, )
-    wandb.config.update(dict(args._get_kwargs()))
+    # Set global output variables
+    set_defaults(args, model_prefix, args.eval_type, args.feedback, args.blind, args.lr)
 
+    
     if args.eval_type == 'val':
-        train_val(args.seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug)
+        train_val(args.eval_type, args.seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug)
     else:
-        train_test(seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug)
+        train_test(args.eval_type, seed, max_episode_len, history, max_input_length, feedback_method, n_iters, model_prefix, blind, debug)
 
     # test_submission(seed, max_episode_len, history, MAX_INPUT_LENGTH, feedback_method, n_iters, model_prefix, blind)

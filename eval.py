@@ -65,18 +65,13 @@ class Evaluation(object):
 
         # Distance from final position to goal
         top_final_goal = planner.get_top_dist(final_position, goal)
-        euc_final_goal = planner.get_euc_dist(final_position, goal)
-        
+
         # topolocal distance from oracle position to goal
         top_oracle_goal = np.min([planner.get_top_dist(p, goal) for p in path])
-        euc_oracle_goal = np.min([planner.get_euc_dist(p, goal) for p in path])
-
 
         # Store the metrics
         self.scores['top_final_goal'].append(top_final_goal)
         self.scores['top_oracle_goal'].append(top_oracle_goal)
-        self.scores['euc_final_goal'].append(euc_final_goal)
-        self.scores['euc_oracle_goal'].append(euc_oracle_goal)
 
 
     def score(self, output_file):

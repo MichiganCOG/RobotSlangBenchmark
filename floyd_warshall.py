@@ -16,7 +16,6 @@ from os.path import join, dirname, isfile
 class FloydWarshallRobotslang:
 
     def __init__(self, mapfile, radius=MM.R):
-       
         self.root    = dirname(mapfile)
         self.mapfile = cv2.imread(mapfile)
         self.radius  = radius

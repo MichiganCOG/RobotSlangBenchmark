@@ -46,7 +46,7 @@ class R2RBatch():
     ''' Implements the Room to Room navigation task, using discretized viewpoints and pretrained features '''
 
     def __init__(self, batch_size=100, seed=10, splits=['train'], tokenizer=None,
-                 path_type='planner_path', history='target', blind=False):
+                 path_type='planner_path', blind=False):
         self.env = EnvBatch(batch_size=batch_size, blind=blind)
         self.data = []
         self.scans = []
@@ -56,8 +56,6 @@ class R2RBatch():
             self.scans.append(item['scan'])
             new_item = dict(item)
             new_item['inst_idx'] = item['inst_idx']
-            
-            # history == 'all':
             dia_inst = ''
             sentences = []
             seps = []
