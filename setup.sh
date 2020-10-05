@@ -1,2 +1,2 @@
 PYTHONPATH=""
-source env/bin/activate
+source new_env/bin/activate
