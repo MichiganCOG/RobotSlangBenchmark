@@ -136,7 +136,16 @@ env/
 
 snapshots/
 *.npz
-results/
-plots/
+#results/
+#plots/
 
 NDH-output/
+
+*.avi
+
+wandb/
+
+slurm_logs/
+new_env/
+
+FINAL_RESULTS/

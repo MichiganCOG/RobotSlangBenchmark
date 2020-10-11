@@ -16,31 +16,34 @@ class X:
     def map(self, *args):
         return list(map(*args))
 
-class Y:
+class FakeScaler:
     def transform(self, x):
         return x
-def get_scaler():
-    #print("BAD SCALER")
-    #return Y() 
 
-    # Get the measurements 
-    with open('{}/train.json'.format(Files.data)) as f:
-        data = json.load(f)
+def get_scaler(debug):
+    if False: #debug:
+        print("BAD SCALER")
+        return FakeScaler() 
+    else:
 
-    # Get the measurements from different mazes
-    scans = [data[i]['scan'] for i in range(len(data))]
-    num_processes = 6
-    #p = X()
-    p = Pool(num_processes)
-    measurements = p.map(get_data, scans)
-    measurements = [m for m in measurements if len(m) > 1 ]
+        # Get the measurements 
+        with open('{}/train.json'.format(Files.data)) as f:
+            data = json.load(f)
 
-    # Concatenate and run unit scale
-    measurements = np.concatenate(measurements, 0) 
-    scaler = StandardScaler()
-    scaler.fit(measurements)
+        # Get the measurements from different mazes
+        scans = [data[i]['scan'] for i in range(len(data))]
+        num_processes = 6
+        #p = X()
+        p = Pool(num_processes)
+        measurements = p.map(get_data, scans)
+        measurements = [m for m in measurements if len(m) > 1 ]
 
-    return scaler
+        # Concatenate and run unit scale
+        measurements = np.concatenate(measurements, 0) 
+        scaler = StandardScaler()
+        scaler.fit(measurements)
+
+        return scaler
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ padding_idx = base_vocab.index('<PAD>')
 def load_datasets(splits):
     data = []
     for split in splits:
-        assert split in ['train', 'val_seen', 'val_unseen', 'test']
+        assert split in ['train', 'val_seen', 'test']
         with open('%s/%s.json' % (Files.data, split)) as f:
             data += json.load(f)
     return data

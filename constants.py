@@ -39,11 +39,12 @@ class  Action:
 class Files:
     mapfile   = 'maze.map.png'
     objfile   = 'maze.map-fixed.png'
-    data      = 'NDH-data'
-    results   = 'NDH-output/results'
-    plots     = 'NDH-output/plots'
-    snapshots = 'NDH-output/snapshots'
+    basedir   = '/z/home/shurjo/reborn/RobotSlangBenchmark'
+    data      = basedir + '/' + 'NDH-data'
+    results   = basedir + '/' + 'NDH-output/results'
+    plots     = basedir + '/' + 'NDH-output/plots'
+    snapshots = basedir + '/' + 'NDH-output/snapshots'
 
 class Globs:
-    raw_maps = 'mazedata/Run_*/maze/{}'.format(Files.mapfile)
-    obj_maps = 'mazedata/Run_*/maze/{}'.format(Files.objfile)
+    raw_maps = Files.basedir + '/' + 'mazedata/Run_*/maze/{}'.format(Files.mapfile)
+    obj_maps = Files.basedir + '/' + 'mazedata/Run_*/maze/{}'.format(Files.objfile)

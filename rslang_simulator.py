@@ -29,7 +29,7 @@ BLUE  = (255,   0,   0)
 GREEN = (  0, 255,   0)
 
 @lru_cache()
-def get_targets(fname='lookup_scans.json'):
+def get_targets(fname=Files.basedir + '/lookup_scans.json'):
     with open(fname, 'r') as f:
         out = json.load(f)
     return out
@@ -39,7 +39,7 @@ class RobotSlangSimulator:
     def __init__(self, scanId, show_rays=True, show_grid=True): 
         self.scanId = scanId
         self.root, self.target, agent_pose, goal_pose = scanId.split('-')
-        self.root = dirname(self.root)
+        self.root = os.path.join(Files.basedir, dirname(self.root))
         self.agent_pose_ini = to_array(agent_pose)
         self.goal_pose_ini  = to_array(goal_pose)
         
@@ -50,7 +50,7 @@ class RobotSlangSimulator:
         self.show_grid = show_grid 
         
         # Floyd warshall algorithm for shortest path supervision
-        self.mapfile_var = join(self.root, Files.mapfile)
+        self.mapfile_var = join(self.root, Files.objfile)
         self.planner = FloydWarshallRobotslang(self.mapfile_var)
         
         # Navigation pixels for  visualization
@@ -341,12 +341,19 @@ class RobotSlangSimulator:
     def __repr__(self):
         return "{}-{}".format(numify(self.root), self.target)
     
-    def shortest_agent(self, folder):
+    def shortest_agent(self):
         action = None
         while action != Action.END:
             action = self.next_shortest_path_action()
             self.makeActions(action)
         return self.step_counter
+
+    def shortest_agent_images(self):
+        action = None
+        while action != Action.END:
+            yield self.display(draw_measurements=True) 
+            action = self.next_shortest_path_action()
+            self.makeActions(action)
     
     def get_all_data(self):
         """
@@ -387,27 +394,6 @@ class RobotSlangSimulator:
         print('Video saved to: {}'.format(vfile))
         return self.step_counter
 
-    def make_results_video(self, folder, traj):
-        width  = 700
-        height = 588
-        fps    = 30
-        fourcc = VideoWriter_fourcc(*'MP42')
-        vfile  = '{}/{}.avi'.format(folder, str(self)) 
-        video  = VideoWriter(vfile, fourcc, float(fps), (width, height))
-        
-        sp = self.planner(self.agent.pose, self.goal.pose)
-        
-        for t in traj:
-            self.agent.pose[:] = t[:]
-            img = self.display()
-            self.draw_trajectory(img, sp, color=(0,223,255))
-            img = resize50(img)
-            video.write(img)
-
-        video.release()
-
-        print('Video saved to: {}'.format(vfile))
-        return self.step_counter
 
 if __name__ == "__main__":
     from rslang_utils import load_data

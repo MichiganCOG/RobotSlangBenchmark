@@ -29,7 +29,7 @@ def to_meters(path):
 class Evaluation(object):
     ''' Results submission format:  [{'instr_id': string, 'trajectory':[(viewpoint_id, heading_rads, elevation_rads),] } ] '''
 
-    def __init__(self, splits, path_type='planner_path'):
+    def __init__(self, splits, seed='planner_path'):
         self.error_margin = 1. #EC.dist_threshold  # cm
         self.splits = splits
         self.gt = {}
@@ -42,7 +42,7 @@ class Evaluation(object):
 
         self.instr_ids = set(self.instr_ids)
         self.distances = {}
-        self.path_type = path_type
+        self.seed = seed
 
     
     def _get_nearest(self, distances, goal_id, path):
@@ -65,18 +65,13 @@ class Evaluation(object):
 
         # Distance from final position to goal
         top_final_goal = planner.get_top_dist(final_position, goal)
-        euc_final_goal = planner.get_euc_dist(final_position, goal)
-        
+
         # topolocal distance from oracle position to goal
         top_oracle_goal = np.min([planner.get_top_dist(p, goal) for p in path])
-        euc_oracle_goal = np.min([planner.get_euc_dist(p, goal) for p in path])
-
 
         # Store the metrics
         self.scores['top_final_goal'].append(top_final_goal)
         self.scores['top_oracle_goal'].append(top_oracle_goal)
-        self.scores['euc_final_goal'].append(euc_final_goal)
-        self.scores['euc_oracle_goal'].append(euc_oracle_goal)
 
 
     def score(self, output_file):
@@ -103,14 +98,14 @@ RESULT_DIR = 'tasks/NDH/results/{}/'.format(get_hostname())
 
 
 def eval_simple_agents():
-    # path_type = 'planner_path'
-    # path_type = 'player_path'
-    path_type = 'trusted_path'
+    # seed = 'planner_path'
+    # seed = 'player_path'
+    seed = 'trusted_path'
 
     ''' Run simple baselines on each split. '''
     for split in ['train', 'val_seen', 'val_unseen']:
-        env = R2RBatch(None, batch_size=1, splits=[split], path_type=path_type)
-        ev = Evaluation([split], path_type=path_type)
+        env = R2RBatch(None, batch_size=1, splits=[split], seed=seed)
+        ev = Evaluation([split], seed=seed)
 
         for agent_type in ['Stop', 'Shortest', 'Random']:
             outfile = '%s%s_%s_agent.json' % (RESULT_DIR, split, agent_type.lower())
