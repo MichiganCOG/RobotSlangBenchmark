@@ -1,0 +1,254 @@
+COLLATING FOR SEED 0
+trusted_path
+	val (120)
+		sample
+			blind-
+				400
+				val_seen top_final_goal	2.793	(2000)
+				val_seen top_oracle_goal	2.388	(2000)
+			blind-language
+				400
+				val_seen top_final_goal	2.931	(2000)
+				val_seen top_oracle_goal	2.581	(2000)
+			blind-vision
+				400
+				val_seen top_final_goal	3.925	(2000)
+				val_seen top_oracle_goal	3.866	(2000)
+		teacher
+			blind-
+				400
+				val_seen top_final_goal	3.186	(2000)
+				val_seen top_oracle_goal	2.650	(2000)
+			blind-language
+				400
+				val_seen top_final_goal	2.948	(2000)
+				val_seen top_oracle_goal	2.541	(2000)
+			blind-vision
+				400
+				val_seen top_final_goal	3.898	(2000)
+				val_seen top_oracle_goal	3.449	(2000)
+	test (120)
+		sample
+			blind-
+				400
+				test top_final_goal	3.100	(2000)
+				test top_oracle_goal	2.692	(2000)
+			blind-language
+				400
+				test top_final_goal	3.020	(2000)
+				test top_oracle_goal	2.629	(2000)
+			blind-vision
+				400
+				test top_final_goal	4.043	(2000)
+				test top_oracle_goal	4.000	(2000)
+		teacher
+			blind-
+				400
+				test top_final_goal	3.325	(2000)
+				test top_oracle_goal	2.801	(2000)
+			blind-language
+				400
+				test top_final_goal	3.096	(2000)
+				test top_oracle_goal	2.666	(2000)
+			blind-vision
+				400
+				test top_final_goal	3.937	(2000)
+				test top_oracle_goal	3.838	(2000)
+COLLATING FOR SEED 1
+trusted_path
+	val (120)
+		sample
+			blind-
+				400
+				val_seen top_final_goal	2.842	(2000)
+				val_seen top_oracle_goal	2.450	(2000)
+			blind-language
+				400
+				val_seen top_final_goal	2.882	(2000)
+				val_seen top_oracle_goal	2.439	(2000)
+			blind-vision
+				400
+				val_seen top_final_goal	3.863	(2000)
+				val_seen top_oracle_goal	3.808	(2000)
+		teacher
+			blind-
+				400
+				val_seen top_final_goal	3.088	(2000)
+				val_seen top_oracle_goal	2.561	(2000)
+			blind-language
+				400
+				val_seen top_final_goal	3.192	(2000)
+				val_seen top_oracle_goal	2.637	(2000)
+			blind-vision
+				400
+				val_seen top_final_goal	3.896	(2000)
+				val_seen top_oracle_goal	3.763	(2000)
+	test (120)
+		sample
+			blind-
+				400
+				test top_final_goal	2.941	(2000)
+				test top_oracle_goal	2.544	(2000)
+			blind-language
+				400
+				test top_final_goal	3.042	(2000)
+				test top_oracle_goal	2.697	(2000)
+			blind-vision
+				400
+				test top_final_goal	3.980	(2000)
+				test top_oracle_goal	3.907	(2000)
+		teacher
+			blind-
+				400
+				test top_final_goal	3.464	(2000)
+				test top_oracle_goal	2.927	(2000)
+			blind-language
+				400
+				test top_final_goal	3.193	(2000)
+				test top_oracle_goal	2.814	(2000)
+			blind-vision
+				400
+				test top_final_goal	3.937	(2000)
+				test top_oracle_goal	3.844	(2000)
+COLLATING FOR SEED 2
+trusted_path
+	val (120)
+		sample
+			blind-
+				400
+				val_seen top_final_goal	2.942	(2000)
+				val_seen top_oracle_goal	2.505	(2000)
+			blind-language
+				400
+				val_seen top_final_goal	2.801	(2000)
+				val_seen top_oracle_goal	2.416	(2000)
+			blind-vision
+				400
+				val_seen top_final_goal	4.062	(1200)
+				val_seen top_oracle_goal	3.967	(2000)
+		teacher
+			blind-
+				400
+				val_seen top_final_goal	3.133	(2000)
+				val_seen top_oracle_goal	2.622	(2000)
+			blind-language
+				400
+				val_seen top_final_goal	3.238	(2000)
+				val_seen top_oracle_goal	2.644	(2000)
+			blind-vision
+				400
+				val_seen top_final_goal	3.902	(2000)
+				val_seen top_oracle_goal	3.775	(2000)
+	test (120)
+		sample
+			blind-
+				400
+				test top_final_goal	2.879	(2000)
+				test top_oracle_goal	2.547	(2000)
+			blind-language
+				40
+				test top_final_goal	3.205	(2000)
+				test top_oracle_goal	3.021	(2000)
+			blind-vision
+				40
+				test top_final_goal	4.024	(1250)
+				test top_oracle_goal	3.973	(1350)
+		teacher
+			blind-
+				400
+				test top_final_goal	3.243	(2000)
+				test top_oracle_goal	2.761	(2000)
+			blind-language
+				400
+				test top_final_goal	3.226	(2000)
+				test top_oracle_goal	2.587	(2000)
+			blind-vision
+				400
+				test top_final_goal	3.933	(2000)
+				test top_oracle_goal	3.833	(2000)
+Averages and std over seeds
+	val
+		sample-blind-
+			trusted_path	top_final_goal	 3.27	(1.12)
+			trusted_path	top_oracle_goal	 3.12	(1.13)
+		sample-blind-language
+			trusted_path	top_final_goal	 3.42	(1.06)
+			trusted_path	top_oracle_goal	 3.26	(1.11)
+		sample-blind-vision
+			trusted_path	top_final_goal	 4.04	(1.04)
+			trusted_path	top_oracle_goal	 4.00	(1.03)
+		teacher-blind-
+			trusted_path	top_final_goal	 3.68	(1.28)
+			trusted_path	top_oracle_goal	 3.20	(1.27)
+		teacher-blind-language
+			trusted_path	top_final_goal	 3.77	(1.28)
+			trusted_path	top_oracle_goal	 3.27	(1.21)
+		teacher-blind-vision
+			trusted_path	top_final_goal	 4.01	(1.09)
+			trusted_path	top_oracle_goal	 3.86	(1.06)
+	test
+		sample-blind-
+			trusted_path	top_final_goal	 3.38	(1.15)
+			trusted_path	top_oracle_goal	 3.20	(1.14)
+		sample-blind-language
+			trusted_path	top_final_goal	 3.32	(1.12)
+			trusted_path	top_oracle_goal	 3.17	(1.10)
+		sample-blind-vision
+			trusted_path	top_final_goal	 4.10	(1.27)
+			trusted_path	top_oracle_goal	 4.04	(1.26)
+		teacher-blind-
+			trusted_path	top_final_goal	 3.76	(1.61)
+			trusted_path	top_oracle_goal	 3.24	(1.51)
+		teacher-blind-language
+			trusted_path	top_final_goal	 3.67	(1.56)
+			trusted_path	top_oracle_goal	 3.16	(1.50)
+		teacher-blind-vision
+			trusted_path	top_final_goal	 4.03	(1.35)
+			trusted_path	top_oracle_goal	 3.91	(1.31)
+val
+	teacher-blind-
+		sample-blind-
+			trusted_path	N=76	(3.68, 3.27)	p=0.001
+	teacher-blind-
+		teacher-blind-language
+			trusted_path	N=76	(3.68, 3.77)	p=0.059
+	teacher-blind-
+		teacher-blind-vision
+			trusted_path	N=76	(3.68, 4.01)	p=0.004
+	sample-blind-
+		sample-blind-language
+			trusted_path	N=76	(3.27, 3.42)	p=0.003
+	sample-blind-
+		sample-blind-vision
+			trusted_path	N=76	(3.27, 4.04)	p=0.000
+test
+	teacher-blind-
+		sample-blind-
+			trusted_path	N=77	(3.76, 3.38)	p=0.004
+	teacher-blind-
+		teacher-blind-language
+			trusted_path	N=77	(3.76, 3.67)	p=0.176
+	teacher-blind-
+		teacher-blind-vision
+			trusted_path	N=77	(3.76, 4.03)	p=0.025
+	sample-blind-
+		sample-blind-language
+			trusted_path	N=77	(3.38, 3.32)	p=0.260
+	sample-blind-
+		sample-blind-vision
+			trusted_path	N=77	(3.38, 4.10)	p=0.000
+# tests 10
+0 ('test', 'sample-blind-', 'trusted_path') ('test', 'sample-blind-vision', 'trusted_path') 1.2682546230701382e-16 0.0017070857607370277
+1 ('val', 'sample-blind-', 'trusted_path') ('val', 'sample-blind-vision', 'trusted_path') 2.6298872682816006e-14 0.0034141715214740555
+2 ('val', 'teacher-blind-', 'trusted_path') ('val', 'sample-blind-', 'trusted_path') 0.0011678767101425305 0.005121257282211083
+3 ('val', 'sample-blind-', 'trusted_path') ('val', 'sample-blind-language', 'trusted_path') 0.003080675328128413 0.006828343042948111
+4 ('val', 'teacher-blind-', 'trusted_path') ('val', 'teacher-blind-vision', 'trusted_path') 0.0035602549065855867 0.008535428803685139
+5 ('test', 'teacher-blind-', 'trusted_path') ('test', 'sample-blind-', 'trusted_path') 0.004212916014611327 0.010242514564422166
+6 ('test', 'teacher-blind-', 'trusted_path') ('test', 'teacher-blind-vision', 'trusted_path') 0.02498409220147463 0.011949600325159194
+alpha 0.05 m 10 c(cm) 2.9289682539682538 k 6
+(('test', 'teacher-blind-', 'trusted_path'), ('test', 'sample-blind-', 'trusted_path'))
+(('val', 'sample-blind-', 'trusted_path'), ('val', 'sample-blind-language', 'trusted_path'))
+(('test', 'sample-blind-', 'trusted_path'), ('test', 'sample-blind-vision', 'trusted_path'))
+(('val', 'teacher-blind-', 'trusted_path'), ('val', 'sample-blind-', 'trusted_path'))
+(('val', 'teacher-blind-', 'trusted_path'), ('val', 'teacher-blind-vision', 'trusted_path'))
+(('val', 'sample-blind-', 'trusted_path'), ('val', 'sample-blind-vision', 'trusted_path'))
