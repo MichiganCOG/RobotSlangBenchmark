@@ -10,12 +10,16 @@ from rslang_simulator import RobotSlangSimulator
 import tqdm
 
 
-def _score_item(data, oracle=False):
+def _score_item(data, metric):
     ''' Calculate error based on the final position in trajectory, and also 
         the closest position (oracle stopping rule). '''
     # shortest path (load it one at a time)
     path = data['trajectory']
-    env = RobotSlangSimulator(data['scan'])
+    try:
+        env = RobotSlangSimulator(data['scan'])
+    except TypeError:  # DEBUG
+        print(data['scan'])  # DEBUG
+        return 0  # DEBUG
     planner = env.planner
     # Planner to get topological distanced
 
@@ -24,13 +28,23 @@ def _score_item(data, oracle=False):
     final_position = path[-1]
 
     # Distance from final position to goal
-    if not oracle:
-        top_final_goal = planner.get_top_dist(final_position, goal)
+    if metric == 'top_final_goal':
+        value = planner.get_top_dist(final_position, goal)
+    elif metric == 'oracle_top_final_goal':
+        value = np.min([planner.get_top_dist(p, goal) for p in path])
+    elif metric == 'success':
+        dist = planner.get_top_dist(final_position, goal)
+        value = 1 if dist < 2 * 0.254 else 0  # [ https://arxiv.org/pdf/1807.06757.pdf ]
+    elif metric == 'spl':
+        dist = planner.get_top_dist(final_position, goal)
+        success = 1 if dist < 2 * 0.254 else 0
+        best_path_dist = planner.get_top_dist(start, goal)
+        value = success * best_path_dist / max(best_path_dist, dist)
     else:
-        top_final_goal = np.min([planner.get_top_dist(p, goal) for p in path])
+        raise(ValueError, 'Unrecognized metric "%s"' % metric)
 
     # Store the metrics
-    return top_final_goal
+    return value
 
 PLOT_DIR = 'FINAL_RESULTS/plots/'
 RESULTS_DIR = 'FINAL_RESULTS/results/'
@@ -104,66 +118,63 @@ for seed in range(n_seeds):
                         # if ifm in dfs[log]:
                         #     summary[cond][abl]["if"][path_type] = list(dfs[log][ifm])
                         cond = eval_type + "_seen" if eval_type == 'val' else eval_type
-                        for gdm in ['%s top_final_goal' % cond, '%s top_oracle_goal' % cond]:
+                        for gdm in ['%s top_final_goal' % cond, '%s top_oracle_goal' % cond,
+                                    '%s success' % cond, '%s spl' % cond]:
+                            m = gdm.split()[-1]
                             if gdm in dfs[log]:
-                                m = gdm.split()[-1]
                                 summary[eval_type][abl][m][path_type] = list(dfs[log][gdm])
 
-                                # Find and read associated data from results JSON.
-                                # If not test, just get best performance across this fold.
-                                if eval_type != "test":
-                                    best_row = dfs[log].loc[dfs[log][gdm].idxmin()]
-                                    v = best_row[gdm]
-                                    iteration = best_row['iteration']
-                                    if max_iter is not None:
-                                        iteration = min(max_iter, iteration)
-                                    # print(log, iteration)  # DEBUG
-                                    # _ = input()  # DEBUG
+                            # Find and read associated data from results JSON.
+                            # If not test, just get best performance across this fold.
+                            # Perf is always at the epoch that was best for the main metric, top_final_goal.
+                            if eval_type != "test":
+                                best_row = dfs[log].loc[dfs[log]['%s top_final_goal' % gdm.split()[0]].idxmin()]
+                                iteration = best_row['iteration']
+                                if max_iter is not None:
+                                    iteration = min(max_iter, iteration)
+                                # print(log, iteration)  # DEBUG
+                                # _ = input()  # DEBUG
 
-                                else:  # get test perf at best iter from val_seen (there's no 'unseen' val in RoboSlang)
-                                    val_log = '%s-%s-%s' % ("val", feedback, mod)
-                                    best_row = dfs[val_log].loc[dfs[val_log]['%s %s' %
-                                                                             ('val_seen', gdm.split()[-1])].idxmin()]
-                                    iteration = best_row['iteration']
-                                    if max_iter is not None:
-                                        iteration = min(max_iter, iteration)
-                                    # print(log, iteration)  # DEBUG
-                                    # _ = input()  # DEBUG
-                                    # test-seq2seq-all-trusted_path-80-sample-imagenet 6200.0
-                                    v = dfs[log].loc[dfs[log]['iteration'] == iteration][gdm]
+                            else:  # get test perf at best iter from val_seen (there's no 'unseen' val in RoboSlang)
+                                val_log = '%s-%s-%s' % ("val", feedback, mod)
+                                best_row = dfs[val_log].loc[dfs[val_log]['val_seen top_final_goal'].idxmin()]
+                                iteration = best_row['iteration']
+                                if max_iter is not None:
+                                    iteration = min(max_iter, iteration)
+                                # print(log, iteration)  # DEBUG
+                                # _ = input()  # DEBUG
+                                # test-seq2seq-all-trusted_path-80-sample-imagenet 6200.0
 
-                                # Open the json of individual trajectory scores at this iteration.
-                                rfn = os.path.join(RESULTS_DIR, fn_dir,
-                                                   "%s_%s_iter_%d.json" % (base_fn.split('-log')[0], cond, iteration))
-                                if not os.path.isfile(rfn):  # Should go away after full rerun.
-                                    print("WARNING: '%s' does not exist, but iter is best" % rfn)
-                                    found = False
-                                    iter_sub = 1
-                                    while not found:
-                                        rfn = os.path.join(RESULTS_DIR, fn_dir,
-                                                       "%s_%s_iter_%d.json" % (base_fn.split('-log')[0], cond, iteration - iter_sub))
-                                        if os.path.isfile(rfn):
-                                            found = True
-                                        iter_sub += 1
-                                    print("... using '%s' instead" % rfn)
-                                with open(rfn, 'r') as f:
-                                    rd = json.load(f)
-                                if m not in rd[0]:
-                                    print("Calculating missing %s data..." % m)
-                                    for idx in tqdm.tqdm(range(len(rd))):
-                                        rd[idx][m] = _score_item(rd[idx], oracle='oracle' in m)
-                                    print("... done; caching data back to file...")
-                                    with open(rfn, 'w') as f:
-                                        json.dump(rd, f)
-                                    print("... done; wrote back to '%s'" % rfn)
-                                metric_by_traj[eval_type][abl][m][path_type] = \
-                                    {rd[idx]["inst_idx"]: rd[idx][m]
-                                     for idx in range(len(rd))}
-                                for inst_idx in metric_by_traj[eval_type][abl][m][path_type]:
-                                    if not np.isfinite(metric_by_traj[eval_type][abl][m][path_type][inst_idx]):
-                                        inf_inst_idxs.add(inst_idx)
-                            else:
-                                print("WARNING: '%s' entry missing from log '%s'" % (gdm, fn))
+                            # Open the json of individual trajectory scores at this iteration.
+                            rfn = os.path.join(RESULTS_DIR, fn_dir,
+                                               "%s_%s_iter_%d.json" % (base_fn.split('-log')[0], cond, iteration))
+                            if not os.path.isfile(rfn):  # Should go away after full rerun.
+                                print("WARNING: '%s' does not exist, but iter is best" % rfn)
+                                found = False
+                                iter_sub = 1
+                                while not found:
+                                    rfn = os.path.join(RESULTS_DIR, fn_dir,
+                                                   "%s_%s_iter_%d.json" % (base_fn.split('-log')[0], cond, iteration - iter_sub))
+                                    if os.path.isfile(rfn):
+                                        found = True
+                                    iter_sub += 1
+                                print("... using '%s' instead" % rfn)
+                            with open(rfn, 'r') as f:
+                                rd = json.load(f)
+                            if m not in rd[0]:
+                                print("Calculating missing '%s' data..." % m)
+                                for idx in tqdm.tqdm(range(len(rd))):
+                                    rd[idx][m] = _score_item(rd[idx], m)
+                                print("... done; caching data back to file...")
+                                with open(rfn, 'w') as f:
+                                    json.dump(rd, f)
+                                print("... done; wrote back to '%s'" % rfn)
+                            metric_by_traj[eval_type][abl][m][path_type] = \
+                                {rd[idx]["inst_idx"]: rd[idx][m]
+                                 for idx in range(len(rd))}
+                            for inst_idx in metric_by_traj[eval_type][abl][m][path_type]:
+                                if not np.isfinite(metric_by_traj[eval_type][abl][m][path_type][inst_idx]):
+                                    inf_inst_idxs.add(inst_idx)
                     else:
                         print("WARNING: %s Missing file log in dir '%s'" % (eval_type, os.path.join(PLOT_DIR, fn_dir)))
 
@@ -204,7 +215,7 @@ for eval_type in seed_avg_metric_by_traj:
                        np.average([np.average(seed_avg_metric_by_traj[eval_type][abl][m][path_type][inst_idx])
                                    for inst_idx in seed_avg_metric_by_traj[eval_type][abl][m][path_type]]),
                        np.std([np.average(seed_avg_metric_by_traj[eval_type][abl][m][path_type][inst_idx])
-                                   for inst_idx in seed_avg_metric_by_traj[eval_type][abl][m][path_type]])))
+                               for inst_idx in seed_avg_metric_by_traj[eval_type][abl][m][path_type]])))
                 for inst_idx in seed_avg_metric_by_traj[eval_type][abl][m][path_type]:
                     seed_avg_metric_by_traj[eval_type][abl][m][path_type][inst_idx] = np.average(
                         seed_avg_metric_by_traj[eval_type][abl][m][path_type][inst_idx])
