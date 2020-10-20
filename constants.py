@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 from os.path import join
+import os
 
 class MazeConstants:
     # Geometery
@@ -39,7 +40,7 @@ class  Action:
 class Files:
     mapfile   = 'maze.map.png'
     objfile   = 'maze.map-fixed.png'
-    basedir   = '/z/home/shurjo/reborn/RobotSlangBenchmark'
+    basedir   = os.getcwd()
     data      = basedir + '/' + 'NDH-data'
     results   = basedir + '/' + 'NDH-output/results'
     plots     = basedir + '/' + 'NDH-output/plots'
