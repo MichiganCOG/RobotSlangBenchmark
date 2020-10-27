@@ -27,3 +27,10 @@ To make videos of our trials using the simulator run the following:
 ```
 python make_simulation_videos.py 
 ```
+
+## Raw Data
+
+Download videos of robotslang trials [here] https://github.com/MichiganCOG/RobotSlangBenchmark/tree/master/data
+
+## Questions? 
+Contact us at shurjo@umich.edu 
