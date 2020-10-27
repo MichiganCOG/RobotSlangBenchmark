@@ -142,6 +142,7 @@ snapshots/
 NDH-output/
 
 *.avi
+*.mp4
 
 wandb/
 
@@ -149,3 +150,5 @@ slurm_logs/
 new_env/
 
 FINAL_RESULTS/
+
+data.tar.gz
