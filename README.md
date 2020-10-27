@@ -30,7 +30,7 @@ python make_simulation_videos.py
 
 ## Raw Data
 
-Download videos of robotslang trials [here] https://github.com/MichiganCOG/RobotSlangBenchmark/tree/master/data
+Download videos of robotslang trials [here](https://github.com/MichiganCOG/RobotSlangBenchmark/tree/master/data)
 
 ## Questions? 
 Contact us at shurjo@umich.edu 
