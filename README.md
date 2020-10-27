@@ -1,6 +1,6 @@
 ## RobotSlang Benchmark README
 
-Use the following script to setup a virtual environment and cache shortest paths and parrticle measurements.
+Use the following script to setup a virtual environment and cache shortest paths and particle measurements.
 
 ```
 source install.sh 
@@ -27,3 +27,10 @@ To make videos of our trials using the simulator run the following:
 ```
 python make_simulation_videos.py 
 ```
+
+## Raw Data
+
+Download videos of robotslang trials [here](https://github.com/MichiganCOG/RobotSlangBenchmark/tree/master/data)
+
+## Questions? 
+Contact us at shurjo@umich.edu 
