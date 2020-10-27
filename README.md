@@ -1,6 +1,6 @@
 ## RobotSlang Benchmark README
 
-Use the following script to setup a virtual environment and cache shortest paths and parrticle measurements.
+Use the following script to setup a virtual environment and cache shortest paths and particle measurements.
 
 ```
 source install.sh 
